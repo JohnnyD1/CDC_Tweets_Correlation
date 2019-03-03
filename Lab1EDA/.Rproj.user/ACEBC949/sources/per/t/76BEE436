@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1551560467143.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "76BEE436",
+    "lastKnownWriteTime" : 6,
+    "last_content_update" : 1551560467143,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "A42837B0",
+        "caption" : "areas_df",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=areas_df&cache_key=A42837B0",
+        "displayedObservations" : 184579,
+        "environment" : "",
+        "object" : "areas_df",
+        "preview" : 0,
+        "totalObservations" : 184579,
+        "variables" : 6
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

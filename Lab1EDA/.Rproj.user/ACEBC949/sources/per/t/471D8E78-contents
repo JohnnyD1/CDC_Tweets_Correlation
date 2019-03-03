@@ -1,0 +1,133 @@
+# Influenza National Summary 
+
+data <- read.csv("part2/InfluenzaNationalSummaryFeb2.csv")
+df <- data.frame(data)
+sub_cols <- c("YEAR", "WEEK")
+sub_df <- df[sub_cols]
+sub_df <- transform(sub_df,YEARWEEK=paste0(YEAR,WEEK))
+attach(sub_df)
+df$YEARWEEK = YEARWEEK
+df$YEAR = NULL
+df$WEEK = NULL
+df$TOTAL.SPECIMENS = NULL
+df
+attach(df)
+
+df1 <- df[c("YEARWEEK","TOTAL.A")]
+df1 <- cbind(df1, TOTAL.B)
+df1 <- melt(df1)
+df1
+df2 <- df[c("YEARWEEK","TOTAL.B")]
+df3 <- df[c("YEARWEEK","PERCENT.POSITIVE")]
+df4 <- df[c("YEARWEEK","PERCENT.A")]
+df5 <- df[c("YEARWEEK","PERCENT.B")]
+
+g1 <- ggplot() +
+geom_col(data=df1, aes(x=YEARWEEK, y=value, fill=variable),color="black") +
+scale_fill_manual(values=c("yellow","#228B22"),labels=c(" A"," B")) +
+geom_line(data=df3, aes(x=YEARWEEK, y=PERCENT.POSITIVE*8000/25, color="Percent Positive"),group=1) +
+geom_line(data=df4, aes(x=YEARWEEK, y=PERCENT.A*8000/25, color="% Positive Flu A"), linetype="longdash",group=1)+
+geom_line(data=df5, aes(x=YEARWEEK, y=PERCENT.B*8000/25, color="% Positive Flu B"), linetype="longdash", group=1) +
+scale_color_manual(values=c("Percent Positive"="black","% Positive Flu A"="#999900","% Positive Flu B"="#32CD32")) +
+theme(legend.title=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"), legend.key=element_blank(),axis.text.x = element_text(angle = 90), plot.title=element_text(hjust=0.5))+
+ggtitle("Influenza Positive Tests Reported to CDC by U.S. Clinical Laboratories,\n National Summary, 2018-2019 Season\n")+
+scale_y_continuous(name = expression("Number of Positive Specimens"), limits = c(0, 8000), sec.axis = sec_axis(~. *25/8000, name = "Percent Positive"),expand=c(0,0),breaks=seq(0,8000,1000)) +
+xlab("Week") +
+ylab("Number of Positive Specimens")
+plot(g1)
+
+# Influenza Positive Tests
+
+data <- read.csv("part2/PositiveTestedFeb2.csv")
+df <- data.frame(data)
+sub_cols <- c("YEAR", "WEEK")
+sub_df <- df[sub_cols]
+sub_df <- transform(sub_df,YEARWEEK=paste0(YEAR,WEEK))
+attach(sub_df)
+df$YEARWEEK = YEARWEEK
+df$YEAR = NULL
+df$WEEK = NULL
+df$TOTAL.SPECIMENS = NULL
+df
+
+df <- melt(df)
+df
+
+g2 <- ggplot() +
+geom_col(data=df, aes(x=YEARWEEK, y=value, fill=variable), color="black") +
+scale_fill_manual(values=c("#FFFF00","#F7990D","#E50000","#8A2BE2","#008000","#ADFF2F","#00FF00"),
+labels=c(" A (subtyping not performed)"," A (H1N1)pdm09"," A (H3N2)"," H3N2v"," B (lineage not performed)"," B (Victoria Lineage)", " B (Yamagata Lineage"))+
+xlab("Week") +
+ylab("Number of Positive Specimens") +
+theme(legend.title=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"), legend.key=element_blank(),axis.text.x = element_text(angle = 90), plot.title = element_text(hjust=.5)) +
+scale_y_continuous(expand=c(0,0),limits=c(0,1800), breaks=seq(0,1800, 200)) +
+ggtitle("Influenza Positive Tests Reported to CDC by Public Health Laboratories,\n National Summary, 2018-2019 Season\n")
+plot(g2)
+
+# Flu Heat Map
+
+data <- read.csv("part2/Flu_HeatMapFeb2.csv")
+
+df <- data.frame(data)
+
+
+keep <- c("STATENAME","ACTIVITY.LEVEL", "ACTIVITY.LEVEL.LABEL")
+df <- df[keep]
+df
+library(stringr)
+df$LEVEL <- str_remove(df$ACTIVITY.LEVEL, "Level ")
+df$ACTIVITY.LEVEL <- NULL  
+attach(df)
+df
+
+
+df$state_name <- STATENAME
+df$STATENAME <- NULL
+df
+ord <- rev(c(1,2,3,4,5,6,7,8,9,10))
+
+attach(df)
+comb <- df %>% 
+left_join(states, by = "state_name") 
+comb$state_fips <- NULL
+comb$state_abbv <- NULL
+
+library(maptools)
+library(raster)
+library(plyr)
+library(ggplot2)
+library(rgdal)
+pr <- getData("GADM", country="PRI", level=0)
+pr
+pr_df <- fortify(pr)
+pr_df
+pr_df$state_name = rep("Puerto Rico", length(pr_df$lat))
+pr_df
+pr_df$group <- as.numeric(as.character(pr_df$group))
+pr_df$group <- pr_df$group + 56.1
+
+pr_df$long <- pr_df$long + -22
+pr_df$lat <- pr_df$lat + 7
+avlong <- mean(pr_df$long)
+avlat <- mean(pr_df$lat)
+
+pr_df$long <- pr_df$long + 2 *(pr_df$long - avlong) 
+pr_df$lat <- pr_df$lat + 2 *(pr_df$lat - avlat)
+comb2 <- pr_df %>% left_join(df)
+comb2$id <- NULL
+comb3 <- rbind(comb2, comb)
+
+ggplot()+
+geom_polygon(comb, mapping=aes(long, lat, group = group, fill = LEVEL),color = "gray", size = .05) +
+geom_polygon(comb2, mapping=aes(long, lat, group = group, fill = LEVEL),color = "gray", size = .05) +
+coord_map(projection = "mercator") +
+ggtitle("2018-19 Influenza Season Week 5 ending Feb 02, 2019") +
+scale_fill_manual(values=c("10"="#BE0000", "9"="#FF3300", "8"="#FF6600", "7"="#FF9900", "6"="#FFCC00", "5"="#FFFF00","4"="#CCFF00","3"="#99FF00","2"="#66FF00","1"="#33FF00"),breaks=ord)
+  
+library(rgdal)
+library(sf)
+getwd()
+nyc <- read_sf(dsn="tl_2018_us_county",layer="tl_2018_us_county")
+nyc_df <- fortify(nyc)
+MacintoshHD⁩ ▸ ⁨Users⁩ ▸ ⁨JohnnyD⁩ ▸ ⁨Downloads⁩ ▸ ⁨tl_2018_us_county⁩
+

@@ -1,0 +1,24 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1550083451684.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3660131828",
+    "id" : "471D8E78",
+    "lastKnownWriteTime" : 1551586018,
+    "last_content_update" : 1551586018612,
+    "path" : "~/Documents/CSE487/Lab1EDA/part2/Lab1Part2.Rmd",
+    "project_path" : "part2/Lab1Part2.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "133,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

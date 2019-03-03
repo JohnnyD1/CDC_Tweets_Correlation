@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1551560155262.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "2F919694",
+    "lastKnownWriteTime" : 8589934336,
+    "last_content_update" : 1551560155262,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "4F3E9A1A",
+        "caption" : "nyc_df",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=nyc_df&cache_key=4F3E9A1A",
+        "displayedObservations" : 75741,
+        "environment" : "",
+        "object" : "nyc_df",
+        "preview" : 0,
+        "totalObservations" : 75741,
+        "variables" : 1
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

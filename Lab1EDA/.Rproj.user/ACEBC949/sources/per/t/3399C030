@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1551561717372.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "3399C030",
+    "lastKnownWriteTime" : -9007199254740993,
+    "last_content_update" : 1551561717372,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "775625F8",
+        "caption" : "nyc",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=nyc&cache_key=775625F8",
+        "displayedObservations" : 5,
+        "environment" : "",
+        "object" : "nyc",
+        "preview" : 0,
+        "totalObservations" : 5,
+        "variables" : 5
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

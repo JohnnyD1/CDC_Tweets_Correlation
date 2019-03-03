@@ -1,0 +1,335 @@
+# Influenza National Summary 
+
+
+if (getwd()=="/Users/JohnnyD/")
+{
+  setwd("/Users/JohnnyD/Documents/CSE487/LAB1EDA/part2")
+}
+
+data <- read.csv("InfluenzaNationalSummaryFeb2.csv")
+
+df <- data.frame(data)
+sub_cols <- c("YEAR", "WEEK")
+sub_df <- df[sub_cols]
+sub_df <- transform(sub_df,YEARWEEK=paste0(YEAR,WEEK))
+attach(sub_df)
+df$YEARWEEK = YEARWEEK
+df$YEAR = NULL
+df$WEEK = NULL
+df$TOTAL.SPECIMENS = NULL
+df
+attach(df)
+df
+df1 <- df[c("YEARWEEK","TOTAL.A")]
+df1 <- cbind(df1, TOTAL.B)
+library(reshape2)
+df1 <- melt(df1)
+df1
+df2 <- df[c("YEARWEEK","TOTAL.B")]
+df3 <- df[c("YEARWEEK","PERCENT.POSITIVE")]
+df4 <- df[c("YEARWEEK","PERCENT.A")]
+df5 <- df[c("YEARWEEK","PERCENT.B")]
+
+library(ggplot2)
+g1 <- ggplot() +
+geom_col(data=df1, aes(x=YEARWEEK, y=value, fill=variable),color="black") +
+scale_fill_manual(values=c("yellow","#228B22"),labels=c(" A"," B")) +
+geom_line(data=df3, aes(x=YEARWEEK, y=PERCENT.POSITIVE*8000/25, color="Percent Positive"),group=1) +
+geom_line(data=df4, aes(x=YEARWEEK, y=PERCENT.A*8000/25, color="% Positive Flu A"), linetype="longdash",group=1)+
+geom_line(data=df5, aes(x=YEARWEEK, y=PERCENT.B*8000/25, color="% Positive Flu B"), linetype="longdash", group=1) +
+scale_color_manual(values=c("Percent Positive"="black","% Positive Flu A"="#999900","% Positive Flu B"="#32CD32")) +
+theme(legend.title=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"), legend.key=element_blank(),axis.text.x = element_text(angle = 90), plot.title=element_text(hjust=0.5))+
+ggtitle("Influenza Positive Tests Reported to CDC by U.S. Clinical Laboratories,\n National Summary, 2018-2019 Season\n")+
+scale_y_continuous(name = expression("Number of Positive Specimens"), limits = c(0, 8000), sec.axis = sec_axis(~. *25/8000, name = "Percent Positive"),expand=c(0,0),breaks=seq(0,8000,1000)) +
+xlab("Week") +
+ylab("Number of Positive Specimens")
+plot(g1)
+
+# Influenza Positive Tests
+
+data <- read.csv("PositiveTestedFeb2.csv")
+df <- data.frame(data)
+sub_cols <- c("YEAR", "WEEK")
+sub_df <- df[sub_cols]
+sub_df <- transform(sub_df,YEARWEEK=paste0(YEAR,WEEK))
+attach(sub_df)
+df$YEARWEEK = YEARWEEK
+df$YEAR = NULL
+df$WEEK = NULL
+df$TOTAL.SPECIMENS = NULL
+df
+
+df <- melt(df)
+df
+
+g2 <- ggplot() +
+geom_col(data=df, aes(x=YEARWEEK, y=value, fill=variable), color="black") +
+scale_fill_manual(values=c("#FFFF00","#F7990D","#E50000","#8A2BE2","#008000","#ADFF2F","#00FF00"),
+labels=c(" A (subtyping not performed)"," A (H1N1)pdm09"," A (H3N2)"," H3N2v"," B (lineage not performed)"," B (Victoria Lineage)", " B (Yamagata Lineage"))+
+xlab("Week") +
+ylab("Number of Positive Specimens") +
+theme(legend.title=element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"), legend.key=element_blank(),axis.text.x = element_text(angle = 90), plot.title = element_text(hjust=.5)) +
+scale_y_continuous(expand=c(0,0),limits=c(0,1800), breaks=seq(0,1800, 200)) +
+ggtitle("Influenza Positive Tests Reported to CDC by Public Health Laboratories,\n National Summary, 2018-2019 Season\n")
+plot(g2)
+
+# Flu Heat Map
+data <- read.csv("Flu_HeatMapFeb2.csv")
+
+df <- data.frame(data)
+
+keep <- c("STATENAME","ACTIVITY.LEVEL", "ACTIVITY.LEVEL.LABEL")
+df <- df[keep]
+df
+library(stringr)
+df$LEVEL <- str_remove(df$ACTIVITY.LEVEL, "Level ")
+df$ACTIVITY.LEVEL <- NULL  
+attach(df)
+df
+
+# has all 50 states plus DC
+library(urbnmapr)
+library(ggplot2)
+sts <- states
+sts <- fortify(sts)
+#sts <- rbend(sts, )
+
+
+# getting Puerto Rico data
+library(raster)
+pr <- getData("GADM", country="Puerto Rico", level=0)
+pr_df <- fortify(pr)
+
+# removing unnecessary columns
+keep <- c("long", "lat", "order", "group", "state_name")
+sts <- sts[keep]
+
+pr_df$state_name <- "Puerto Rico"
+pr_df <- pr_df[keep]
+
+# combining pr with other states
+areas <- rbind(sts, pr_df)
+areas <- fortify(areas)
+
+# get NYC coordinates
+library(sf)
+
+nyc <- read_sf(dsn="Borough Boundaries", layer="geo_export_4fb1db71-cb5b-4de4-91e6-6a0b0816dead")
+nyc <- fortify(nyc)
+# need to rearrange lat long coordinates
+
+nyc_lat <- c()
+nyc_long <- c()
+# getting the coordinates (terribly inefficient)
+for (i in nyc$geometry){
+  cat("borough done\n")
+  for (p in i){
+    for (j in p){
+      for (g in j){
+        if (g > 0) {
+          nyc_lat <- c(nyc_lat, g)
+        }
+        else {
+          nyc_long <- c(nyc_long, g)
+        }
+
+      }
+    }
+  }
+}
+# making amount of coordinates smaller
+#nyc_lat <- nyc_lat[seq(1, length(nyc_lat), 5)]
+#nyc_long <- nyc_long[seq(1, length(nyc_long), 5)]
+
+# making nyc dataframe
+nyc_df <- data.frame(nyc_lat)
+nyc_df$lat <- nyc_df$nyc_lat
+nyc_df$nyc_lat <- NULL
+nyc_df$long <- nyc_long
+
+nyc_df$state_name <- "New York City"
+
+ord <- seq(max(areas$order)+1, max(areas$order)+length(nyc_df$state_name), 1)
+nyc_df$order <- ord
+nyc_df$group <- 1.6
+
+# now combine with other states
+areas <- rbind(areas, nyc_df)
+
+# now need to combine original flu data with areas
+df$state_name <- df$STATENAME
+df$STATENAME <- NULL
+areas
+library(dplyr)
+areas_df <- areas %>% left_join(df, by = "state_name")
+areas_df <- fortify(areas_df)
+# did something weird so im gonna remove some unnecessary columns
+areas_df$ACTIVITY.LEVEL.LABEL.y <- NULL
+areas_df$LEVEL.y <- NULL
+areas_df$ACTIVITY.LEVEL.LABEL.y <- NULL
+areas_df$level <- areas_df$ACTIVITY.LEVEL.LABEL.x
+areas_df$ACTIVITY.LEVEL.LABEL.x <- NULL
+areas_df$label = areas_df$level
+areas_df$level <- areas_df$LEVEL.x
+areas_df$LEVEL.x <- NULL
+attach(areas_df)
+names(areas_df)
+areas_df1 <- areas_df
+areas_df1 <- fortify(areas_df1)
+# need to change coordinate systems of DC, Puerto Rico, and NYC
+#first Puerto Rico
+areas_df1$lat[areas_df1$state_name == "Puerto Rico"] <- areas_df1$lat[areas_df1$state_name == "Puerto Rico"]+9
+mean_latpr <- mean(areas_df1$lat[areas_df1$state_name == "Puerto Rico"])
+areas_df1$lat[areas_df1$state_name == "Puerto Rico"] <- areas_df1$lat[areas_df1$state_name == "Puerto Rico"] + 1.5*(areas_df1$lat[areas_df1$state_name == "Puerto Rico"] - mean_latpr)
+areas_df1$long[areas_df1$state_name == "Puerto Rico"] <- areas_df1$long[areas_df1$state_name == "Puerto Rico"]-21
+mean_longpr <- mean(areas_df1$long[areas_df1$state_name == "Puerto Rico"])
+areas_df1$long[areas_df1$state_name == "Puerto Rico"] <- areas_df1$long[areas_df1$state_name == "Puerto Rico"] + 1.5*(areas_df1$long[areas_df1$state_name == "Puerto Rico"] - mean_longpr)
+# now district of columbia
+areas_df1$lat[areas_df1$state_name == "District of Columbia"] <- areas_df1$lat[areas_df1$state_name == "District of Columbia"]-3
+mean_latdc <- mean(areas_df1$lat[areas_df1$state_name == "District of Columbia"])
+areas_df1$lat[areas_df1$state_name == "District of Columbia"] <- areas_df1$lat[areas_df1$state_name == "District of Columbia"] + 10*(areas_df1$lat[areas_df1$state_name == "District of Columbia"] - mean_latdc)
+areas_df1$long[areas_df1$state_name == "District of Columbia"] <- areas_df1$long[areas_df1$state_name == "District of Columbia"]+5
+mean_longdc <- mean(areas_df1$long[areas_df1$state_name == "District of Columbia"])
+areas_df1$long[areas_df1$state_name == "District of Columbia"] <- areas_df1$long[areas_df1$state_name == "District of Columbia"] + 10*(areas_df1$long[areas_df1$state_name == "District of Columbia"] - mean_longdc)
+# now nyc
+areas_df1$long[areas_df1$state_name == "New York City"] <- areas_df1$long[areas_df1$state_name == "New York City"]+7
+mean_latnyc <- mean(areas_df1$lat[areas_df1$state_name == "New York City"])
+areas_df1$lat[areas_df1$state_name == "New York City"] <- areas_df1$lat[areas_df1$state_name == "New York City"] + 9*(areas_df1$lat[areas_df1$state_name == "New York City"] - mean_latnyc)
+mean_longnyc <- mean(areas_df1$long[areas_df1$state_name == "New York City"])
+areas_df1$long[areas_df1$state_name == "New York City"] <- areas_df1$long[areas_df1$state_name == "New York City"] + 9*(areas_df1$long[areas_df1$state_name == "New York City"] - mean_longnyc)
+
+# something weird is going on with the NYC's coordinates in this range, so I'm just gonna take them out
+cc <- seq(105750,105950, 1)
+areas2 <- areas_df1[-cc, ]
+
+# get the proper color palette
+#colors <- colorRampPalette(c("red","yellow","green"))
+#colors <- colors(10)
+colors <- c("10"="#CC0000","9"="#FF4500","8"="#FF8C00", "7"="#FFA500","6"="#FFD700", "5"="#E6FF00","4"="#ABFA33","3"="#97FA33","2"="#3EFC04","1"="#0BE404")
+
+
+g <- ggplot(areas2, aes(long, lat, group = group, fill=LEVEL)) +
+geom_polygon(color = "gray", size = .05) +
+scale_fill_manual(values=colors) + 
+annotate("text", label = "Alaska", x =-122.794213 , y = 30.569676, size = 3, colour = "black")+
+annotate("text", label = "Hawaii", x =-108.794213 , y = 29.569676, size = 3, colour = "black")+
+annotate("text", label = "Puerto Rico", x =-88.794213 , y = 25.569676, size = 3, colour = "black")+
+annotate("text", label = "District of Columbia", x =-70.794213 , y = 34.569676, size = 3, colour = "black")+
+annotate("text", label = "New York City", x =-68.794213 , y = 38.569676, size = 3, colour = "black")+
+#,breaks=c("10","9", "8","7",  "6","5", "4",  "3", "2","1"),
+#  labels=c("","","","","","","","","",""))+
+coord_map(projection = "mercator") +
+ggtitle("2018-19 Influenza Season Week 5 ending Feb 02, 2019")+
+theme(plot.title = element_text(face = "bold",hjust=.5,size=13), 
+legend.position = "none",
+axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks = element_blank(),
+axis.title.y=element_blank(),axis.title.x=element_blank(),
+axis.line=element_blank()) 
+
+
+
+
+
+# and here we do the extremely tedious task of putting lines and labels to the legend items
+# heavily taken from stackoverflow
+# create data to plot the legend
+# x and y to create a vertical row of points
+# all levels of the variable to be represented in the legend (here z)
+library(data.table)
+d <- data.table(x = 1, y = 1:10, z = factor(1:10))
+
+# cut z into groups which should be displayed as text in legend
+d[ , grp := cut(as.numeric(z), breaks = c(0, 2, 5, 7, 11),
+                labels = c("Minimal", "Low", "  Moderate", "High"))]
+
+# calculate the start, end and mid points of each group
+# used for vertical segments
+d2 <- d[ , .(x = 1, y = min(y), yend = max(y), ymid = mean(y)), by = grp]
+
+# end points of segments in long format, used for horizontal 'ticks' on the segments  
+d3 <- data.table(x = 1, y = unlist(d2[ , .(y, yend)]))
+
+# offset (trial and error)
+v <- 0.5
+# plot the 'legend'
+p2 <- ggplot(mapping = aes(x = x-1, y = y)) +
+  geom_point(data = d, aes(color = z), size = 5) +
+  geom_segment(data = d2,
+               aes(x = x + v-1, xend = x + v-1, yend = yend)) +
+  geom_segment(data = d3,
+               aes(x = x + v-1, xend = x + (v - 0.1)-1, yend = y)) +
+  geom_text(data = d2, aes(x = x + v - 0.4, y = ymid, label = grp)) +
+  scale_color_manual(values = colors, guide = FALSE) +
+  scale_x_continuous(limits = c(0, 4)) +
+  theme(axis.text.x = element_blank(), 
+  axis.text.y = element_blank(), 
+  axis.ticks = element_blank(),
+axis.title.y=element_blank(),
+axis.title.x=element_blank(),
+axis.line=element_blank())+
+  theme_void()
+  
+library(cowplot)
+
+plot_grid(g,
+          plot_grid(NULL, p2, NULL, nrow = 3, rel_heights = c(1, 1.5, 1)),
+          rel_widths = c(3, 1))
+          
+          
+          
+# Influenza Mortality Rate
+
+data <- read.csv("MortalityJan26.csv")
+df <- data.frame(data)
+# getting only necessary data
+keep <- c("WEEK","PERCENT.P.I","THRESHOLD","BASELINE","SEASON")
+df <- df[keep]
+
+attach(df)
+
+
+
+# gonna convert SEASONS to an integer, then append Weeks to it
+#df$SEASON <- gsub( "-", "", as.character(df$SEASON))
+# for some reason there is a week 53 in the data, so I'm gonna get rid of that
+#df <- df[!(WEEK == 53),]
+# need to concatenate WEEK and SEASON
+# maybe not
+#sub_cols <- c("SEASON", "WEEK")
+#sub_df <- df[sub_cols]
+#sub_df <- transform(sub_df,SEASONWEEK=paste0(SEASON,WEEK))
+#attach(sub_df)
+
+#df$SEASONWEEK <- SEASONWEEK
+#detach(sub_df)
+#attach(df)
+#df$SEASONWEEK <- as.numeric(as.character(SEASONWEEK))
+nums <- seq(1,length(df$SEASON),1)
+
+df$order <- nums
+
+
+library(ggplot2)
+
+sam_point1 <- sample(1:length(df$order),1)
+sam_pointx1 <- df$order[sam_point]
+sam_pointy1 <- df$PERCENT.P.I[sam_point]
+
+ggplot() + 
+geom_line(data=df, aes(x=order, y=PERCENT.P.I), color="red")+
+stat_smooth(df,mapping=aes(x =order , y = BASELINE), method = "lm",
+  formula = y ~ poly(x, 25), color="black")+
+stat_smooth(df,mapping=aes(x =order , y = THRESHOLD), method = "lm",
+  formula = y ~ poly(x, 25), color="black")+
+xlab("MMWR Week") +
+ylab("% of All Deaths Due to P&I")+
+labs(title="Pneumonia and Influenza Mortality from \n the National Center of Health Statistics Mortality
+  Surveillance System\n",
+  subtitle="Data through the week ending February 2, 2019")+
+geom_segment(aes(x=86-15, xend=86, y= 6.6-1, yend= 6.6),
+  arrow = arrow(length = unit(0.5, "cm")))+
+annotate(geom="text", x=86 - 15, 6.6-1.3, label="Seasonal Baseline", color="black",size=3)+
+geom_segment(aes(x=53-15, xend=53, y=6.5+2.5, yend= 6.5), arrow = arrow(length = unit(0.5, "cm")))+
+annotate(geom="text", x=53-15, 6.5+2.6, label="Epidemic Threshold", color="black", size=3)+
+theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
+
