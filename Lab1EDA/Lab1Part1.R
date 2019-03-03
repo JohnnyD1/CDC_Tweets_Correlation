@@ -50,7 +50,7 @@ library("ggmap")
 
 library("maptools")
 library("maps")
-register_google(key = "AIzaSyD2kr-Qs_hBVYOY620mjqgRtKJSr92wdRU") 
+register_google(key = "") 
 visited <- c("SFO", "Chennai", "London", "Melbourne", "Lima,Peru", "Johannesbury, SA")
 ll.visited <- geocode(visited)
 visit.x <- ll.visited$lon
